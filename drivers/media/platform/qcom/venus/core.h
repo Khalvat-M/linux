@@ -129,6 +129,10 @@ struct venus_core {
 	struct clk *core1_bus_clk;
 	struct icc_path *video_path;
 	struct icc_path *cpucfg_path;
+	struct device *pd_core;
+	struct device_link *pd_dl_venus;
+	struct device *pd_core0;
+	struct device *pd_core1;
 	struct video_device *vdev_dec;
 	struct video_device *vdev_enc;
 	struct v4l2_device v4l2_dev;
@@ -150,6 +154,7 @@ struct venus_core {
 	unsigned int error;
 	bool sys_error;
 	const struct hfi_core_ops *core_ops;
+	const struct venus_pm_ops *pm_ops;
 	unsigned long enc_codecs;
 	unsigned long dec_codecs;
 	unsigned int max_sessions_supported;

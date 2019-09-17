@@ -4,11 +4,9 @@
  * Copyright (C) 2017 Linaro Ltd.
  */
 #include <linux/clk.h>
-#include <linux/iopoll.h>
 #include <linux/interconnect.h>
 #include <linux/list.h>
 #include <linux/mutex.h>
-#include <linux/pm_runtime.h>
 #include <linux/slab.h>
 #include <media/videobuf2-dma-sg.h>
 #include <media/v4l2-mem2mem.h>
@@ -17,7 +15,6 @@
 #include "core.h"
 #include "helpers.h"
 #include "hfi_helper.h"
-#include "hfi_venus_io.h"
 
 struct intbuf {
 	struct list_head list;
@@ -1394,52 +1391,3 @@ int venus_helper_get_out_fmts(struct venus_inst *inst, u32 v4l2_fmt,
 	return -EINVAL;
 }
 EXPORT_SYMBOL_GPL(venus_helper_get_out_fmts);
-
-int venus_helper_power_enable(struct venus_core *core, u32 session_type,
-			      bool enable)
-{
-	void __iomem *ctrl, *stat;
-	u32 val;
-	int ret;
-
-	if (!IS_V3(core) && !IS_V4(core))
-		return 0;
-
-	if (IS_V3(core)) {
-		if (session_type == VIDC_SESSION_TYPE_DEC)
-			ctrl = core->base + WRAPPER_VDEC_VCODEC_POWER_CONTROL;
-		else
-			ctrl = core->base + WRAPPER_VENC_VCODEC_POWER_CONTROL;
-		if (enable)
-			writel(0, ctrl);
-		else
-			writel(1, ctrl);
-
-		return 0;
-	}
-
-	if (session_type == VIDC_SESSION_TYPE_DEC) {
-		ctrl = core->base + WRAPPER_VCODEC0_MMCC_POWER_CONTROL;
-		stat = core->base + WRAPPER_VCODEC0_MMCC_POWER_STATUS;
-	} else {
-		ctrl = core->base + WRAPPER_VCODEC1_MMCC_POWER_CONTROL;
-		stat = core->base + WRAPPER_VCODEC1_MMCC_POWER_STATUS;
-	}
-
-	if (enable) {
-		writel(0, ctrl);
-
-		ret = readl_poll_timeout(stat, val, val & BIT(1), 1, 100);
-		if (ret)
-			return ret;
-	} else {
-		writel(1, ctrl);
-
-		ret = readl_poll_timeout(stat, val, !(val & BIT(1)), 1, 100);
-		if (ret)
-			return ret;
-	}
-
-	return 0;
-}
-EXPORT_SYMBOL_GPL(venus_helper_power_enable);
