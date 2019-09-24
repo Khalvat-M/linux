@@ -869,7 +869,7 @@ reconfigure:
 	if (ret)
 		goto free_dpb_bufs;
 
-	venus_helper_load_scale_clocks(inst->core);
+	venus_helper_load_scale_clocks(inst);
 
 	ret = hfi_session_continue(inst);
 	if (ret)
@@ -1077,7 +1077,7 @@ static void vdec_session_release(struct venus_inst *inst)
 		hfi_session_abort(inst);
 
 	venus_helper_free_dpb_bufs(inst);
-	venus_helper_load_scale_clocks(core);
+	venus_helper_load_scale_clocks(inst);
 	INIT_LIST_HEAD(&inst->registeredbufs);
 
 	mutex_unlock(&inst->lock);
